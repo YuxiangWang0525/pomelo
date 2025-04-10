@@ -1,11 +1,11 @@
 # Pomelo
 
-> 🚧 **Work in Progress**
+> ðŸš§ **Work in Progress**
 >
 > Pomelo is currently in development and not usable for production yet.
 
 
-> A lightweight NAT redirection service
+> A lightweight NAT redirection service  
 > the name "pomelo" and database name "nene.db" meaning comes from [here](https://pjsekai.sega.jp/character/unite04/nene/index.html?year=now)
 
 ## What is it?
