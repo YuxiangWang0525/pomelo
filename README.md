@@ -1,6 +1,6 @@
-# Pomelo
+﻿# Pomelo
 
-> ðŸš§ **Work in Progress**
+> 🚧 **Work in Progress**
 >
 > Pomelo is currently in development and not usable for production yet.
 
