@@ -1,4 +1,4 @@
-﻿# Pomelo
+# Pomelo
 
 > 🚧 **Work in Progress**
 >
@@ -13,3 +13,13 @@ This is a NAT A guidance program running on a server in a public network environ
 
 ## How to use it?
 At this stage, we do not recommend immediate production use as potential vulnerabilities have not been ruled out and the functionality has not been fully developed.
+> but you can try below this:
+
+```shell
+cd backend
+pip install -r requirements.txt
+cd ../frontend
+yarn
+yarn dev
+```
+
