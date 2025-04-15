@@ -22,7 +22,7 @@ python app.py
 ```
 and open another shell:
 ```shell
-cd ../frontend
+cd frontend
 yarn
 yarn dev
 ```
