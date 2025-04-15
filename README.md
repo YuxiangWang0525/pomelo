@@ -18,6 +18,10 @@ At this stage, we do not recommend immediate production use as potential vulnera
 ```shell
 cd backend
 pip install -r requirements.txt
+python app.py
+```
+and open another shell:
+```shell
 cd ../frontend
 yarn
 yarn dev
