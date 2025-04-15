@@ -1,10 +1,13 @@
-from flask import Flask, request, jsonify, redirect, abort
+from flask import Flask, request, jsonify, redirect, abort, send_from_directory
 from functools import wraps
 import requests
-from database_manager import init_db, authenticate, update_user, get_route_by_host, get_proxy_target
-
-app = Flask(__name__)
-
+from database_manager import (
+    init_db, authenticate, update_user, get_route_by_host, get_proxy_target, update_route,
+    get_all_routes, add_route, delete_route, validate_webhook_accesskey
+)
+from flask_cors import CORS
+app = Flask(__name__, static_folder='static/dist')
+CORS(app)
 # Initialize database and create default user if necessary
 init_db()
 
@@ -27,11 +30,11 @@ def url_process():
     route = get_route_by_host(host)
 
     if route:
-        _, target, route_type = route
+        _, target, route_type, _ = route
         if route_type == 'redirect':
             return redirect(target, code=302)
         elif route_type == 'proxy':
-            return redirect('/proxy/' + target + '/' + request.full_path, code=307)
+            return redirect('/proxy' + request.full_path, code=307)
 
     return jsonify({'message': host})
 
@@ -99,6 +102,63 @@ def update_credentials():
 @requires_auth
 def protected_resource():
     return jsonify({'message': 'This is a protected resource'}), 200
+
+
+@app.route('/webhook/update_route', methods=['GET'])
+def webhook_update_route():
+    args = request.args
+    if not args or 'accesskey' not in args or 'host' not in args or 'target' not in args or 'type' not in args:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    accesskey = args['accesskey']
+    host = args['host']
+    target = args['target']
+    route_type = args['type']
+
+    if validate_webhook_accesskey(host, accesskey):
+        update_route(host, target, route_type)
+        return jsonify({'message': 'Route updated successfully'}), 200
+    else:
+        return jsonify({'error': 'Access denied or invalid parameters'}), 403
+
+
+@app.route('/api/admin', methods=['GET'])
+@requires_auth
+def admin_dashboard():
+    return send_from_directory(app.static_folder, 'index.html')
+
+
+@app.route('/api/admin/routes', methods=['GET'])
+@requires_auth
+def get_routes():
+    routes = get_all_routes()
+    return jsonify(routes)
+
+
+@app.route('/api/admin/routes', methods=['POST'])
+@requires_auth
+def add_new_route():
+    data = request.get_json()
+    if not data or 'host' not in data or 'target' not in data or 'type' not in data:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    host = data['host']
+    target = data['target']
+    route_type = data['type']
+
+    if add_route(host, target, route_type):
+        return jsonify({'message': 'Route added successfully'}), 201
+    else:
+        return jsonify({'error': 'Failed to add route'}), 500
+
+
+@app.route('/api/admin/routes/<string:host>', methods=['DELETE'])
+@requires_auth
+def delete_route(host):
+    if delete_route(host):
+        return jsonify({'message': 'Route deleted successfully'}), 200
+    else:
+        return jsonify({'error': 'Failed to delete route'}), 500
 
 
 if __name__ == '__main__':

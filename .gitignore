@@ -1,2 +1,6 @@
 nene.db
 .venv/
+.idea/
+__pycache__/
+.vscode/
+node_modules/

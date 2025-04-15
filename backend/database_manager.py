@@ -27,9 +27,16 @@ def init_db():
             CREATE TABLE IF NOT EXISTS route (
                 host TEXT,
                 target TEXT,
-                `type` VARCHAR(32)
+                type VARCHAR(32),
+                accesskey TEXT
             )
         ''')
+
+        # Insert default route if table is empty
+        cursor.execute('SELECT * FROM route')
+        if not cursor.fetchall():
+            cursor.execute('INSERT INTO route (host, target, type, accesskey) VALUES (?, ?, ?, ?)',
+                           ('localhost:5000', 'http://example.com', 'proxy', 'default_access_key'))
 
         conn.commit()
 
@@ -57,12 +64,58 @@ def get_route_by_host(host):
         route = cursor.fetchone()
     return route
 
+
 def get_proxy_target(host):
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT target FROM route WHERE host=? AND type="proxy"', (host,))
         result = cursor.fetchone()
     return result[0] if result else None
+
+
+def update_route(host, target, route_type):
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute('UPDATE route SET target=?, type=? WHERE host=?',
+                       (target, route_type, host))
+        conn.commit()
+        return True
+
+
+def get_all_routes():
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM route')
+        routes = cursor.fetchall()
+    return routes
+
+
+def add_route(host, target, route_type, accesskey=None):
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute('INSERT INTO route (host, target, type, accesskey) VALUES (?, ?, ?, ?)',
+                           (host, target, route_type, accesskey))
+            conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
+
+
+def delete_route(host):
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM route WHERE host=?', (host,))
+        conn.commit()
+        return True
+
+
+def validate_webhook_accesskey(host, accesskey):
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM route WHERE host=? AND accesskey=?', (host, accesskey))
+        route = cursor.fetchone()
+    return route is not None
 
 
 def hash_password(password):
