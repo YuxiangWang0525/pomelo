@@ -34,6 +34,8 @@ export default {
       try {
         const response = await axios.post('http://localhost:5000/login', values);
         userStore.setToken(response.data.message);
+        userStore.setLogin(true);
+
         router.push('/');
       } catch (error) {
         console.error(error);
